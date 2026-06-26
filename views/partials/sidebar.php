@@ -38,14 +38,8 @@
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Académico</p>
             </div>
 
-            <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 cursor-not-allowed">
-                <i class="fas fa-star w-5 text-center"></i>
-                <span>Calificaciones</span>
-            </a>
-            <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 cursor-not-allowed">
-                <i class="fas fa-user-graduate w-5 text-center"></i>
-                <span>Estudiantes</span>
-            </a>
+            <?= navItem('calificaciones', 'star', 'Calificaciones', $currentUrl) ?>
+            <?= navItem('estudiantes', 'user-graduate', 'Estudiantes', $currentUrl) ?>
         </nav>
     </div>
 

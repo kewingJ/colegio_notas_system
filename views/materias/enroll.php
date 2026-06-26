@@ -1,0 +1,77 @@
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <div>
+            <h3 class="text-lg font-black text-gray-900"><?= h($pm['materia_nombre']) ?></h3>
+            <p class="text-xs text-gray-500 font-medium"><?= h($pm['nivel_nombre']) ?> - <?= h($pm['grado_nombre']) ?> | Sección <?= h($pm['seccion']) ?></p>
+        </div>
+        <a href="<?= APP_URL ?>/materias" class="text-xs font-bold text-gray-500 hover:text-gray-900 transition-all">
+            <i class="fas fa-arrow-left mr-1"></i> Volver a Materias
+        </a>
+    </div>
+
+    <form action="<?= APP_URL ?>/materias/doEnroll" method="POST" class="p-6">
+        <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= Session::get(CSRF_TOKEN_NAME) ?>">
+        <input type="hidden" name="pm_id" value="<?= $pm['id'] ?>">
+        <input type="hidden" name="anio_lectivo" value="<?= $pm['anio_lectivo'] ?>">
+
+        <div class="mb-6 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+            <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+            <p class="text-xs text-blue-700 leading-relaxed">
+                A continuación se muestran los alumnos matriculados en <strong><?= h($pm['nivel_nombre']) ?> / <?= h($pm['grado_nombre']) ?></strong> obtenidos desde el sistema central. Selecciona los alumnos que deseas inscribir en esta materia específica.
+            </p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                        <th class="px-6 py-4 w-10">
+                            <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </th>
+                        <th class="px-6 py-4">Carnet</th>
+                        <th class="px-6 py-4">Estudiante</th>
+                        <th class="px-6 py-4">Estado en API</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <?php foreach ($alumnos as $a): ?>
+                    <tr class="hover:bg-gray-50/50 transition-colors <?= $a['ya_inscrito'] ? 'opacity-50' : '' ?>">
+                        <td class="px-6 py-4 text-center">
+                            <?php if ($a['ya_inscrito']): ?>
+                                <i class="fas fa-check-circle text-green-500" title="Ya inscrito"></i>
+                            <?php else: ?>
+                                <input type="checkbox" name="alumnos[]" value="<?= h($a['carnet']) ?>" class="student-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <?php endif; ?>
+                        </td>
+                        <td class="px-6 py-4 font-mono text-xs font-bold text-gray-600"><?= h($a['carnet']) ?></td>
+                        <td class="px-6 py-4 text-sm font-bold text-gray-900"><?= h($a['nombre']) ?></td>
+                        <td class="px-6 py-4">
+                            <span class="text-[10px] font-black uppercase text-green-600 bg-green-50 px-2 py-1 rounded"><?= h($a['estado']) ?></span>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <?php if (empty($alumnos)): ?>
+            <div class="py-12 text-center">
+                <i class="fas fa-user-slash text-gray-300 text-3xl mb-4 block"></i>
+                <p class="text-gray-500 text-sm">No se encontraron alumnos en la API para este nivel y grado.</p>
+            </div>
+        <?php else: ?>
+            <div class="mt-8 flex justify-end">
+                <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
+                    <i class="fas fa-user-plus"></i> Procesar Inscripción
+                </button>
+            </div>
+        <?php endif; ?>
+    </form>
+</div>
+
+<script>
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+});
+</script>
