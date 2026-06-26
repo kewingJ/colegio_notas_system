@@ -1,0 +1,24 @@
+{
+  "status": "success",
+  "count": 1,
+  "data": [
+    {
+      "id": 6378,
+      "carnet": "COLE-2026-6378",
+      "nombre": "Lucia Geovannia Rojas Hernandez",
+      "padre": "Jaime Antonio Gutierrez (Tutor)",
+      "madre": "Adriana Susana Hernandez (Tutor)",
+      "contacto": {
+        "telefono": "89066328",
+        "email": "arianasusana2209@gmail.com"
+      },
+      "academico": {
+        "anio_lectivo": "2026",
+        "nivel": "SECUNDARIA",
+        "grado": "SEPTIMO GRADO",
+        "seccion": "A"
+      },
+      "estado": "Matriculado e Inscrito"
+    }
+  ]
+}

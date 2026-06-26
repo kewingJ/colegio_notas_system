@@ -1,0 +1,10 @@
+{
+  "status": "success",
+  "data": {
+    "nombre": "INSTITUTO PEDAGOGICO ARCOIRIS",
+    "lema": "AÑO LECTIVO 2015",
+    "direccion": "Direccion del Colegio",
+    "telefonos": "9999 8888",
+    "logo": null
+  }
+}
