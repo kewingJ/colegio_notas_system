@@ -36,9 +36,14 @@
             </div>
 
             <?php if (!empty($alumnos)): ?>
-                <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
-                    <i class="fas fa-user-plus"></i> Procesar Inscripción
-                </button>
+                <div class="flex items-center gap-4">
+                    <div id="selection-counter" class="text-xs font-bold text-gray-500 hidden">
+                        <span id="selected-count">0</span> seleccionados
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
+                        <i class="fas fa-user-plus"></i> Procesar Inscripción
+                    </button>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -87,6 +92,62 @@
 </div>
 
 <script>
+// Persistencia de selección entre páginas
+let selectedAlumnos = JSON.parse(localStorage.getItem('selected_enroll_alumnos_<?= $pm['id'] ?>') || '[]');
+
+function updateSelectionDisplay() {
+    const counter = document.getElementById('selection-counter');
+    const countSpan = document.getElementById('selected-count');
+    if (selectedAlumnos.length > 0) {
+        counter.classList.remove('hidden');
+        countSpan.textContent = selectedAlumnos.length;
+    } else {
+        counter.classList.add('hidden');
+    }
+
+    // Actualizar campos ocultos en el formulario para envío
+    const form = document.querySelector('form[action$="doEnroll"]');
+    // Limpiar anteriores
+    form.querySelectorAll('input[name="alumnos[]"]').forEach(i => {
+        if (!i.classList.contains('student-checkbox')) i.remove();
+    });
+    // Añadir seleccionados que no estén en la página actual
+    selectedAlumnos.forEach(carnet => {
+        const visibleCheckbox = form.querySelector(`.student-checkbox[value="${carnet}"]`);
+        if (!visibleCheckbox) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'alumnos[]';
+            input.value = carnet;
+            form.appendChild(input);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Marcar checkboxes basados en localStorage
+    document.querySelectorAll('.student-checkbox').forEach(cb => {
+        if (selectedAlumnos.includes(cb.value)) {
+            cb.checked = true;
+        }
+        cb.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                if (!selectedAlumnos.includes(e.target.value)) selectedAlumnos.push(e.target.value);
+            } else {
+                selectedAlumnos = selectedAlumnos.filter(id => id !== e.target.value);
+            }
+            localStorage.setItem('selected_enroll_alumnos_<?= $pm['id'] ?>', JSON.stringify(selectedAlumnos));
+            updateSelectionDisplay();
+        });
+    });
+    updateSelectionDisplay();
+});
+
+// Limpiar localStorage al enviar
+document.querySelector('form[action$="doEnroll"]').addEventListener('submit', () => {
+    localStorage.removeItem('selected_enroll_alumnos_<?= $pm['id'] ?>');
+});
+
 function applyFilters() {
     const search = document.getElementById('alumnoSearch').value;
     const url = new URL(window.location.href);
@@ -103,7 +164,11 @@ document.getElementById('alumnoSearch').addEventListener('keypress', function(e)
 });
 
 document.getElementById('selectAll').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.student-checkbox');
-    checkboxes.forEach(cb => cb.checked = this.checked);
+    const checkboxes = document.querySelectorAll('.student-checkbox:not(:disabled)');
+    checkboxes.forEach(cb => {
+        cb.checked = this.checked;
+        // Disparar evento change manualmente para actualizar localStorage
+        cb.dispatchEvent(new Event('change'));
+    });
 });
 </script>
