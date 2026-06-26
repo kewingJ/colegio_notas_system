@@ -5,13 +5,13 @@
             <p class="text-xs text-gray-500 font-medium">Sección: <?= h($pm['seccion']) ?> | Gestión de Notas por Periodo</p>
         </div>
         <div class="flex gap-2">
-            <a href="<?= APP_URL ?>/calificaciones" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition-all">
+            <a href="<?= APP_URL ?>/calificacion" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition-all">
                 <i class="fas fa-arrow-left mr-1"></i> Volver
             </a>
         </div>
     </div>
 
-    <form action="<?= APP_URL ?>/calificaciones/guardar" method="POST" class="p-6">
+    <form action="<?= APP_URL ?>/calificacion/guardar" method="POST" class="p-6">
         <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= Session::get(CSRF_TOKEN_NAME) ?>">
         <input type="hidden" name="pm_id" value="<?= $pm['id'] ?>">
 

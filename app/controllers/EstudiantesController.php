@@ -1,5 +1,5 @@
 <?php
-class EstudianteController extends Controller {
+class EstudiantesController extends Controller {
     private Estudiante $estudianteModel;
     private Materia $materiaModel;
 

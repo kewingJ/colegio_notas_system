@@ -29,7 +29,7 @@
                 <?php endif; ?>
             </div>
 
-            <a href="<?= APP_URL ?>/calificaciones/gestionar/<?= $asig['id'] ?>" class="flex items-center justify-center gap-2 w-full py-3 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-blue-600 transition-all">
+            <a href="<?= APP_URL ?>/calificacion/gestionar/<?= $asig['id'] ?>" class="flex items-center justify-center gap-2 w-full py-3 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-blue-600 transition-all">
                 <i class="fas fa-edit"></i> Gestionar Notas
             </a>
         </div>
