@@ -21,6 +21,27 @@
             </p>
         </div>
 
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+            <div class="flex gap-3">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                        <i class="fas fa-search text-xs"></i>
+                    </span>
+                    <input type="text" id="alumnoSearch" value="<?= h($search) ?>" placeholder="Buscar por nombre o carnet..."
+                        class="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                </div>
+                <button type="button" onclick="applyFilters()" class="bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-900 transition-all">
+                    Filtrar
+                </button>
+            </div>
+
+            <?php if (!empty($alumnos)): ?>
+                <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
+                    <i class="fas fa-user-plus"></i> Procesar Inscripción
+                </button>
+            <?php endif; ?>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead>
@@ -57,19 +78,30 @@
         <?php if (empty($alumnos)): ?>
             <div class="py-12 text-center">
                 <i class="fas fa-user-slash text-gray-300 text-3xl mb-4 block"></i>
-                <p class="text-gray-500 text-sm">No se encontraron alumnos en la API para este nivel y grado.</p>
-            </div>
-        <?php else: ?>
-            <div class="mt-8 flex justify-end">
-                <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
-                    <i class="fas fa-user-plus"></i> Procesar Inscripción
-                </button>
+                <p class="text-gray-500 text-sm">No se encontraron alumnos bajo los criterios de búsqueda.</p>
             </div>
         <?php endif; ?>
     </form>
+
+    <?php require_once __DIR__ . '/../partials/pagination.php'; ?>
 </div>
 
 <script>
+function applyFilters() {
+    const search = document.getElementById('alumnoSearch').value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('search', search);
+    url.searchParams.set('page', 1);
+    window.location.href = url.toString();
+}
+
+document.getElementById('alumnoSearch').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        applyFilters();
+    }
+});
+
 document.getElementById('selectAll').addEventListener('change', function() {
     const checkboxes = document.querySelectorAll('.student-checkbox');
     checkboxes.forEach(cb => cb.checked = this.checked);

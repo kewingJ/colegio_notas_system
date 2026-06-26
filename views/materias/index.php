@@ -119,6 +119,12 @@
                             <a href="<?= APP_URL ?>/materias/edit/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </a>
+                            <form action="<?= APP_URL ?>/materias/delete/<?= $m['id'] ?>" method="POST" class="inline" onsubmit="return confirm('¿Está seguro de eliminar esta materia?')">
+                                <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= Session::get(CSRF_TOKEN_NAME) ?>">
+                                <button type="submit" class="p-2 text-gray-400 hover:text-red-600 transition-colors" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>

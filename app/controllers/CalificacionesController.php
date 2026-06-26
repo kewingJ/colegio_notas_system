@@ -54,6 +54,10 @@ class CalificacionesController extends Controller {
     public function gestionar($profesorMateriaId): void {
         $this->requireAuth();
 
+        $page = (int)($_GET['page'] ?? 1);
+        $search = $_GET['search'] ?? '';
+        $perPage = 10;
+
         // Verificar que el profesor tenga acceso a esta materia (o sea admin)
         $db = Database::getInstance()->getConnection();
         $stmtVerif = $db->prepare("SELECT * FROM profesor_materia WHERE id = ?");
@@ -66,9 +70,14 @@ class CalificacionesController extends Controller {
         }
 
         $materia = $this->materiaModel->findById($pm['materia_id']);
-        $periodos = $this->periodoModel->getAllActive();
+        $periodos = $this->materiaModel->getEvaluaciones($pm['materia_id']);
 
-        // Obtener alumnos inscritos y sus notas
+        // Si la materia no tiene evaluaciones personalizadas, usar los periodos globales
+        if (empty($periodos)) {
+            $periodos = $this->periodoModel->getAllActive();
+        }
+
+        // Obtener alumnos inscritos
         $stmtAlumnos = $db->prepare("
             SELECT i.id as inscripcion_id, i.alumno_carnet
             FROM inscripciones i
@@ -76,12 +85,21 @@ class CalificacionesController extends Controller {
             ORDER BY i.alumno_carnet
         ");
         $stmtAlumnos->execute([$profesorMateriaId]);
-        $inscritos = $stmtAlumnos->fetchAll();
+        $todosInscritos = $stmtAlumnos->fetchAll();
 
         $estudianteModel = new Estudiante();
-        foreach ($inscritos as &$ins) {
+        $inscritosProcesados = [];
+
+        foreach ($todosInscritos as $ins) {
             $apiData = $estudianteModel->findByCarnet($ins['alumno_carnet']);
-            $ins['nombre'] = $apiData ? $apiData['nombre'] : 'Desconocido';
+            $nombre = $apiData ? $apiData['nombre'] : 'Desconocido';
+
+            // Filtro de búsqueda
+            if (!empty($search) && stripos($nombre, $search) === false && stripos($ins['alumno_carnet'], $search) === false) {
+                continue;
+            }
+
+            $ins['nombre'] = $nombre;
 
             // Cargar notas actuales
             $notas = $this->calificacionModel->getByInscripcion($ins['inscripcion_id']);
@@ -89,14 +107,23 @@ class CalificacionesController extends Controller {
             foreach ($notas as $n) {
                 $ins['notas'][$n['periodo_id']] = $n['nota'];
             }
+            $inscritosProcesados[] = $ins;
         }
+
+        $total = count($inscritosProcesados);
+        $offset = ($page - 1) * $perPage;
+        $inscritos = array_slice($inscritosProcesados, $offset, $perPage);
 
         ob_start();
         extract([
             'materia' => $materia,
             'pm' => $pm,
             'periodos' => $periodos,
-            'inscritos' => $inscritos
+            'inscritos' => $inscritos,
+            'total' => $total,
+            'page' => $page,
+            'search' => $search,
+            'perPage' => $perPage
         ]);
         require_once __DIR__ . '/../../views/calificaciones/gestionar.php';
         $content = ob_get_clean();
@@ -130,6 +157,6 @@ class CalificacionesController extends Controller {
             $this->setFlash('error', 'Hubo un error al guardar algunas notas.');
         }
 
-        $this->redirect('calificacion/gestionar/' . $data['pm_id']);
+        $this->redirect('calificaciones/gestionar/' . $data['pm_id']);
     }
 }

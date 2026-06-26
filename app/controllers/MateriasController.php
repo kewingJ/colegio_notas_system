@@ -31,13 +31,7 @@ class MateriasController extends Controller {
         $inscripcionModel = new Inscripcion();
 
         foreach ($materias as &$m) {
-            // Obtener el ID de la asignación (profesor_materia) para esta sección 'A' por defecto si no hay otra
-            // En un sistema real, esto debería estar más integrado en el Model
-            $stmtPM = $db->prepare("SELECT id FROM profesor_materia WHERE materia_id = ? AND activo = 1 LIMIT 1");
-            $stmtPM->execute([$m['id']]);
-            $pm_id = $stmtPM->fetchColumn();
-
-            $m['pm_id'] = $pm_id;
+            $pm_id = $m['pm_id'];
             $m['inscritos'] = $pm_id ? count($inscripcionModel->getInscritosByMateria($pm_id)) : 0;
         }
 
@@ -73,6 +67,10 @@ class MateriasController extends Controller {
     public function enroll($materiaId): void {
         $this->requireAuth('administrador');
 
+        $page = (int)($_GET['page'] ?? 1);
+        $search = $_GET['search'] ?? '';
+        $perPage = 10;
+
         $db = Database::getInstance()->getConnection();
         $stmtPM = $db->prepare("
             SELECT pm.*, m.nombre as materia_nombre, m.nivel_id, m.grado_id, n.nombre as nivel_nombre, g.nombre as grado_nombre
@@ -91,16 +89,33 @@ class MateriasController extends Controller {
         }
 
         // Obtener alumnos de la API que coincidan con el nivel y grado
-        $alumnos = $this->apiService->getAlumnosActivos($pm['nivel_nombre'], $pm['grado_nombre']);
+        $todosAlumnos = $this->apiService->getAlumnosActivos($pm['nivel_nombre'], $pm['grado_nombre']);
 
-        // Filtrar los que ya están inscritos
+        // Filtrar y Procesar
+        $alumnosProcesados = [];
         $inscripcionModel = new Inscripcion();
-        foreach ($alumnos as &$a) {
+        foreach ($todosAlumnos as $a) {
+            if (!empty($search) && stripos($a['nombre'], $search) === false && stripos($a['carnet'], $search) === false) {
+                continue;
+            }
+
             $a['ya_inscrito'] = $inscripcionModel->isEnrolled($a['carnet'], $pm['id'], $pm['anio_lectivo']);
+            $alumnosProcesados[] = $a;
         }
 
+        $total = count($alumnosProcesados);
+        $offset = ($page - 1) * $perPage;
+        $alumnos = array_slice($alumnosProcesados, $offset, $perPage);
+
         ob_start();
-        extract(['pm' => $pm, 'alumnos' => $alumnos]);
+        extract([
+            'pm' => $pm,
+            'alumnos' => $alumnos,
+            'total' => $total,
+            'page' => $page,
+            'search' => $search,
+            'perPage' => $perPage
+        ]);
         require_once __DIR__ . '/../../views/materias/enroll.php';
         $content = ob_get_clean();
 
@@ -152,7 +167,23 @@ class MateriasController extends Controller {
         $this->validateCsrf();
         $data = $this->getPost();
 
+        // Check for duplicates
+        $db = Database::getInstance()->getConnection();
+        $stmtCheck = $db->prepare("SELECT id FROM materias WHERE nombre = ? AND grado_id = ? AND activa = 1");
+        $stmtCheck->execute([$data['nombre'], $data['grado_id']]);
+        if ($stmtCheck->fetch()) {
+            $this->setFlash('error', 'Ya existe una materia con ese nombre para el grado seleccionado.');
+            $this->redirect('materias/create');
+            return;
+        }
+
         if ($this->materiaModel->create($data)) {
+            // Guardar evaluaciones
+            $materiaId = (int)$db->lastInsertId();
+            if (!empty($data['evaluaciones'])) {
+                $this->materiaModel->setEvaluaciones($materiaId, $data['evaluaciones']);
+            }
+
             $this->setFlash('success', 'Materia creada correctamente.');
             $this->redirect('materias');
         } else {
@@ -164,6 +195,7 @@ class MateriasController extends Controller {
     public function edit($id): void {
         $this->requireAuth('administrador');
         $materia = $this->materiaModel->findById((int)$id);
+        $evaluaciones = $this->materiaModel->getEvaluaciones((int)$id);
         $niveles = $this->materiaModel->getNiveles();
         $grados = $this->materiaModel->getGrados($materia['nivel_id']);
 
@@ -181,14 +213,32 @@ class MateriasController extends Controller {
         $this->requireAuth('administrador');
         $this->validateCsrf();
         $data = $this->getPost();
+        $id = (int)$id;
 
-        if ($this->materiaModel->update((int)$id, $data)) {
+        if ($this->materiaModel->update($id, $data)) {
+            // Guardar evaluaciones
+            if (isset($data['evaluaciones'])) {
+                $this->materiaModel->setEvaluaciones($id, $data['evaluaciones']);
+            }
+
             $this->setFlash('success', 'Materia actualizada correctamente.');
             $this->redirect('materias');
         } else {
             $this->setFlash('error', 'Error al actualizar.');
             $this->redirect("materias/edit/$id");
         }
+    }
+
+    public function delete($id): void {
+        $this->requireAuth('administrador');
+        $this->validateCsrf();
+
+        if ($this->materiaModel->delete((int)$id)) {
+            $this->setFlash('success', 'Materia eliminada correctamente.');
+        } else {
+            $this->setFlash('error', 'No se pudo eliminar la materia.');
+        }
+        $this->redirect('materias');
     }
 
     public function assign($id): void {
@@ -219,7 +269,21 @@ class MateriasController extends Controller {
         $this->validateCsrf();
         $data = $this->getPost();
 
-        if ($this->materiaModel->assignProfessor((int)$id, $data['profesor_id'], $data['anio_lectivo'], $data['seccion'])) {
+        $profesorId = (int)$data['profesor_id'];
+        $anio = $data['anio_lectivo'];
+        $seccion = $data['seccion'];
+
+        // Verificar si el profesor ya tiene esa materia en esa sección y año
+        $db = Database::getInstance()->getConnection();
+        $stmtCheck = $db->prepare("SELECT id FROM profesor_materia WHERE profesor_id = ? AND materia_id = ? AND anio_lectivo = ? AND seccion = ? AND activo = 1");
+        $stmtCheck->execute([$profesorId, $id, $anio, $seccion]);
+        if ($stmtCheck->fetch()) {
+            $this->setFlash('error', 'Este profesor ya tiene asignada esta materia en la sección seleccionada.');
+            $this->redirect("materias/assign/$id");
+            return;
+        }
+
+        if ($this->materiaModel->assignProfessor((int)$id, $profesorId, $anio, $seccion)) {
             $this->setFlash('success', 'Profesor asignado correctamente.');
             $this->redirect('materias');
         } else {

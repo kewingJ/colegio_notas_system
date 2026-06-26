@@ -39,11 +39,11 @@
             <div class="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-4">
                 <p class="text-xs font-black text-gray-900 uppercase tracking-widest mb-3">Accesos Rápidos</p>
                 <div class="grid grid-cols-2 gap-2">
-                    <a href="<?= APP_URL ?>/materia" class="p-3 hover:bg-gray-50 rounded-xl transition-all text-center">
+                    <a href="<?= APP_URL ?>/materias" class="p-3 hover:bg-gray-50 rounded-xl transition-all text-center">
                         <i class="fas fa-book text-blue-600 mb-1"></i>
                         <p class="text-[10px] font-bold text-gray-700">Materias</p>
                     </a>
-                    <a href="<?= APP_URL ?>/usuario" class="p-3 hover:bg-gray-50 rounded-xl transition-all text-center">
+                    <a href="<?= APP_URL ?>/usuarios" class="p-3 hover:bg-gray-50 rounded-xl transition-all text-center">
                         <i class="fas fa-users text-purple-600 mb-1"></i>
                         <p class="text-[10px] font-bold text-gray-700">Usuarios</p>
                     </a>
