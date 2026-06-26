@@ -1,5 +1,5 @@
 <?php
-class CalificacionesController extends Controller {
+class CalificacionController extends Controller {
     private Materia $materiaModel;
     private Periodo $periodoModel;
     private Calificacion $calificacionModel;
@@ -130,6 +130,6 @@ class CalificacionesController extends Controller {
             $this->setFlash('error', 'Hubo un error al guardar algunas notas.');
         }
 
-        $this->redirect('calificaciones/gestionar/' . $data['pm_id']);
+        $this->redirect('calificacion/gestionar/' . $data['pm_id']);
     }
 }

@@ -38,7 +38,7 @@
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Académico</p>
             </div>
 
-            <?= navItem('calificaciones', 'star', 'Calificaciones', $currentUrl) ?>
+            <?= navItem('calificacion', 'star', 'Calificaciones', $currentUrl) ?>
             <?= navItem('estudiantes', 'user-graduate', 'Estudiantes', $currentUrl) ?>
         </nav>
     </div>
