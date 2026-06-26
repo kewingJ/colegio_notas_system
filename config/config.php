@@ -17,7 +17,7 @@ define('DB_CHARSET',  'utf8mb4');
 define('API_BASE_URL',    'http://localhost/colegio2/api/v1');
 define('API_TIMEOUT',     10);       // segundos
 define('API_CACHE_TTL',   3600);     // 1 hora
-define('API_USE_MOCK',    false);     // Cambiar a false para conectar a API real
+define('API_USE_MOCK',    true);     // Cambiar a false para conectar a API real
 
 // Endpoints:
 define('API_ENDPOINT_COLEGIO',        '/colegio');
