@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/sistema-notas/public/
+RewriteRule ^(.*)$ /sistema-notas/public/$1 [L,R=301]

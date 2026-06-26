@@ -1,0 +1,47 @@
+{
+  "status": "success",
+  "count": 4,
+  "data": [
+    {
+      "id": 1,
+      "nombre": "PREESCOLAR",
+      "mensualidad_base": 0,
+      "grados": [
+        { "id": 1, "nombre": "PRIMERA ETAPA", "cupo": 0 },
+        { "id": 2, "nombre": "SEGUNDA ETAPA", "cupo": 0 },
+        { "id": 3, "nombre": "TERCERA ETAPA", "cupo": 0 }
+      ]
+    },
+    {
+      "id": 2,
+      "nombre": "PRIMARIA",
+      "mensualidad_base": 0,
+      "grados": [
+        { "id": 4, "nombre": "PRIMER GRADO",   "cupo": 0 },
+        { "id": 5, "nombre": "SEGUNDO GRADO",  "cupo": 0 },
+        { "id": 6, "nombre": "TERCER GRADO",   "cupo": 0 },
+        { "id": 7, "nombre": "CUARTO GRADO",   "cupo": 0 },
+        { "id": 8, "nombre": "QUINTO GRADO",   "cupo": 0 },
+        { "id": 9, "nombre": "SEXTO GRADO",    "cupo": 0 }
+      ]
+    },
+    {
+      "id": 3,
+      "nombre": "SECUNDARIA",
+      "mensualidad_base": 0,
+      "grados": [
+        { "id": 10, "nombre": "SEPTIMO GRADO",  "cupo": 0 },
+        { "id": 11, "nombre": "OCTAVO GRADO",   "cupo": 0 },
+        { "id": 12, "nombre": "NOVENO GRADO",   "cupo": 0 },
+        { "id": 13, "nombre": "DECIMO GRADO",   "cupo": 0 },
+        { "id": 14, "nombre": "UNDECIMO GRADO", "cupo": 0 }
+      ]
+    },
+    {
+      "id": 4,
+      "nombre": "OTROS",
+      "mensualidad_base": 0,
+      "grados": []
+    }
+  ]
+}
