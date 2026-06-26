@@ -1,5 +1,5 @@
 <?php
-class HorarioController extends Controller {
+class HorariosController extends Controller {
     private Horario $horarioModel;
     private PDO $db;
 

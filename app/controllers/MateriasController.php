@@ -1,5 +1,5 @@
 <?php
-class MateriaController extends Controller {
+class MateriasController extends Controller {
     private Materia $materiaModel;
     private ApiRestService $apiService;
 
