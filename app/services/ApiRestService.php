@@ -47,7 +47,8 @@ class ApiRestService {
         $ctx = stream_context_create([
             'http' => [
                 'timeout' => API_TIMEOUT,
-                'header'  => "Accept: application/json\r\n",
+                'header'  => "Accept: application/json\r\n" .
+                             "Authorization: Bearer " . API_BEARER_TOKEN . "\r\n",
             ]
         ]);
 
@@ -111,7 +112,12 @@ class ApiRestService {
     public function isApiOnline(): bool {
         if (API_USE_MOCK) return true;
         $url = rtrim(API_BASE_URL, '/') . API_ENDPOINT_COLEGIO;
-        $ctx = stream_context_create(['http' => ['timeout' => 2]]);
+        $ctx = stream_context_create([
+            'http' => [
+                'timeout' => 2,
+                'header'  => "Authorization: Bearer " . API_BEARER_TOKEN . "\r\n",
+            ]
+        ]);
         $raw = @file_get_contents($url, false, $ctx);
         return $raw !== false;
     }

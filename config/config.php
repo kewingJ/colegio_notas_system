@@ -17,6 +17,7 @@ define('DB_CHARSET',  'utf8mb4');
 define('API_BASE_URL',    'http://localhost/sistema-colegio/api');
 define('API_TIMEOUT',     10);       // segundos
 define('API_CACHE_TTL',   3600);     // 1 hora
+define('API_BEARER_TOKEN', 'YOUR_TOKEN_HERE'); // Token para la API externa
 define('API_USE_MOCK',    true);     // Cambiar a false para conectar a API real
 
 // Endpoints:
