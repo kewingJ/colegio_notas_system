@@ -1,29 +1,28 @@
 <?php
 class Calificacion extends Model {
-    public function save(int $inscripcionId, int $periodoId, float $nota, ?string $observaciones = null): bool {
+    public function save(int $inscripcionId, int $periodoId, float $nota, string $type = 'global', ?string $observaciones = null): bool {
         $stmt = $this->db->prepare("
-            INSERT INTO calificaciones (inscripcion_id, periodo_id, nota, observaciones)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO calificaciones (inscripcion_id, periodo_id, period_type, nota, observaciones)
+            VALUES (?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 nota = VALUES(nota),
                 observaciones = VALUES(observaciones),
                 updated_at = NOW()
         ");
-        return $stmt->execute([$inscripcionId, $periodoId, $nota, $observaciones]);
+        return $stmt->execute([$inscripcionId, $periodoId, $type, $nota, $observaciones]);
     }
 
     public function getByInscripcion(int $inscripcionId): array {
-        // Primero intentar obtener con periodos globales
         $stmt = $this->db->prepare("
             SELECT c.*, p.nombre as periodo_nombre, 1 as is_global
             FROM calificaciones c
             JOIN periodos p ON c.periodo_id = p.id
-            WHERE c.inscripcion_id = ?
+            WHERE c.inscripcion_id = ? AND c.period_type = 'global'
             UNION
             SELECT c.*, me.nombre as periodo_nombre, 0 as is_global
             FROM calificaciones c
             JOIN materia_evaluaciones me ON c.periodo_id = me.id
-            WHERE c.inscripcion_id = ?
+            WHERE c.inscripcion_id = ? AND c.period_type = 'custom'
         ");
         $stmt->execute([$inscripcionId, $inscripcionId]);
         return $stmt->fetchAll();

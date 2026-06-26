@@ -14,6 +14,7 @@
     <form action="<?= APP_URL ?>/calificacion/guardar" method="POST" class="p-6">
         <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= Session::get(CSRF_TOKEN_NAME) ?>">
         <input type="hidden" name="pm_id" value="<?= $pm['id'] ?>">
+        <input type="hidden" name="period_type" value="<?= $periodType ?>">
 
         <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div class="flex gap-3">

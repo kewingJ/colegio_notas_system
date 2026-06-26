@@ -71,10 +71,12 @@ class CalificacionesController extends Controller {
 
         $materia = $this->materiaModel->findById($pm['materia_id']);
         $periodos = $this->materiaModel->getEvaluaciones($pm['materia_id']);
+        $periodType = 'custom';
 
         // Si la materia no tiene evaluaciones personalizadas, usar los periodos globales
         if (empty($periodos)) {
             $periodos = $this->periodoModel->getAllActive();
+            $periodType = 'global';
         }
 
         // Obtener alumnos inscritos
@@ -119,6 +121,7 @@ class CalificacionesController extends Controller {
             'materia' => $materia,
             'pm' => $pm,
             'periodos' => $periodos,
+            'periodType' => $periodType,
             'inscritos' => $inscritos,
             'total' => $total,
             'page' => $page,
@@ -140,12 +143,13 @@ class CalificacionesController extends Controller {
 
         $data = $this->getPost();
         $notas = $data['notas'] ?? []; // [inscripcion_id][periodo_id] = nota
+        $periodType = $data['period_type'] ?? 'global';
 
         $success = true;
         foreach ($notas as $inscripcionId => $periodoNotas) {
             foreach ($periodoNotas as $periodoId => $nota) {
                 if ($nota === '') continue;
-                if (!$this->calificacionModel->save((int)$inscripcionId, (int)$periodoId, (float)$nota)) {
+                if (!$this->calificacionModel->save((int)$inscripcionId, (int)$periodoId, (float)$nota, $periodType)) {
                     $success = false;
                 }
             }
