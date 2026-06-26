@@ -52,6 +52,11 @@ class DashboardController extends Controller {
         $ultimaSync->execute();
         $fechaSync = $ultimaSync->fetchColumn();
 
+        // Eficiencia Académica
+        $totalCupos = (int)$this->db->query("SELECT SUM(cupo_maximo) FROM materias WHERE activa = 1")->fetchColumn();
+        $totalInscritos = (int)$this->db->query("SELECT COUNT(*) FROM inscripciones")->fetchColumn();
+        $eficiencia = $totalCupos > 0 ? round(($totalInscritos / $totalCupos) * 100, 1) : 0;
+
         ob_start();
         $data = [
             'anioActivo' => $anioActivo,
@@ -59,6 +64,7 @@ class DashboardController extends Controller {
             'totalMaterias' => $totalMaterias,
             'totalHorarios' => $totalHorarios,
             'totalAlumnos' => $totalAlumnos,
+            'eficiencia' => $eficiencia,
             'usuariosRecientes' => $usuariosRecientes,
             'apiOnline' => $apiOnline,
             'fechaSync' => $fechaSync

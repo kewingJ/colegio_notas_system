@@ -16,7 +16,8 @@ class EstudiantesController extends Controller {
         $nivel = $_GET['nivel'] ?? '';
 
         $filters = ['search' => $search, 'nivel' => $nivel];
-        $result = $this->estudianteModel->getAll($page, DEFAULT_PAGE_SIZE, $filters);
+        $perPage = 9;
+        $result = $this->estudianteModel->getAll($page, $perPage, $filters);
 
         $estudiantes = $result['data'];
         $total = $result['total'];
@@ -30,7 +31,7 @@ class EstudiantesController extends Controller {
             'page' => $page,
             'search' => $search,
             'nivel' => $nivel,
-            'perPage' => DEFAULT_PAGE_SIZE
+            'perPage' => $perPage
         ]);
         require_once __DIR__ . '/../../views/estudiantes/index.php';
         $content = ob_get_clean();

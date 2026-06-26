@@ -165,17 +165,17 @@
             <div class="relative z-10">
                 <p class="text-blue-100 text-sm font-medium">Eficiencia Académica</p>
                 <div class="flex items-end gap-3 mt-2">
-                    <h2 class="text-4xl font-black">--</h2>
-                    <span class="text-blue-100 text-sm mb-1 font-bold">N/A</span>
+                    <h2 class="text-4xl font-black"><?= $eficiencia ?>%</h2>
+                    <span class="text-blue-100 text-sm mb-1 font-bold">Actual</span>
                 </div>
                 <div class="mt-6">
                     <div class="h-2 w-full bg-blue-500 rounded-full overflow-hidden">
-                        <div class="h-full bg-white rounded-full" style="width: 0%"></div>
+                        <div class="h-full bg-white rounded-full" style="width: <?= $eficiencia ?>%"></div>
                     </div>
                 </div>
                 <p class="mt-4 text-xs text-blue-100 flex items-center gap-2">
                     <i class="fas fa-info-circle"></i>
-                    Disponible cuando se registren notas.
+                    Basado en cupos vs inscripciones.
                 </p>
             </div>
             <!-- Decorative circle -->

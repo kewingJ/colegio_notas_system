@@ -5,13 +5,12 @@ class Materia extends Model {
         $params = [];
 
         $sql = "SELECT m.*, n.nombre as nivel_nombre, g.nombre as grado_nombre,
-                       (SELECT u.nombre FROM profesor_materia pm
-                        JOIN usuarios u ON pm.profesor_id = u.id
-                        WHERE pm.materia_id = m.id AND pm.activo = 1 LIMIT 1) as profesor_nombre,
-                       (SELECT pm.seccion FROM profesor_materia pm WHERE pm.materia_id = m.id AND pm.activo = 1 LIMIT 1) as seccion
+                       pm.id as pm_id, pm.seccion, u.nombre as profesor_nombre
                 FROM materias m
                 JOIN niveles n ON m.nivel_id = n.id
                 JOIN grados g ON m.grado_id = g.id
+                LEFT JOIN profesor_materia pm ON m.id = pm.materia_id AND pm.activo = 1
+                LEFT JOIN usuarios u ON pm.profesor_id = u.id
                 WHERE 1=1";
 
         if (!empty($filters['search'])) {
@@ -117,11 +116,53 @@ class Materia extends Model {
     }
 
     public function assignProfessor(int $materiaId, int $professorId, string $anio, string $seccion): bool {
+        // Verificar si ya existe esta asignación exacta (materia, año, sección) para CUALQUIER profesor
+        $stmtCheck = $this->db->prepare("SELECT id FROM profesor_materia WHERE materia_id = ? AND anio_lectivo = ? AND seccion = ? AND activo = 1");
+        $stmtCheck->execute([$materiaId, $anio, $seccion]);
+        $existing = $stmtCheck->fetch();
+
+        if ($existing) {
+            // Actualizar el profesor asignado a esa sección
+            $stmt = $this->db->prepare("UPDATE profesor_materia SET profesor_id = ? WHERE id = ?");
+            return $stmt->execute([$professorId, $existing['id']]);
+        }
+
         $stmt = $this->db->prepare("
             INSERT INTO profesor_materia (profesor_id, materia_id, anio_lectivo, seccion, activo)
             VALUES (?, ?, ?, ?, 1)
-            ON DUPLICATE KEY UPDATE profesor_id = VALUES(profesor_id), activo = 1
         ");
         return $stmt->execute([$professorId, $materiaId, $anio, $seccion]);
+    }
+
+    public function delete(int $id): bool {
+        // Soft delete: marcar como inactiva
+        $stmt = $this->db->prepare("UPDATE materias SET activa = 0 WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+
+    public function getEvaluaciones(int $materiaId): array {
+        $stmt = $this->db->prepare("SELECT * FROM materia_evaluaciones WHERE materia_id = ? AND activo = 1 ORDER BY id");
+        $stmt->execute([$materiaId]);
+        return $stmt->fetchAll();
+    }
+
+    public function setEvaluaciones(int $materiaId, array $evaluaciones): void {
+        $this->db->beginTransaction();
+        try {
+            // Desactivar anteriores
+            $stmtDel = $this->db->prepare("DELETE FROM materia_evaluaciones WHERE materia_id = ?");
+            $stmtDel->execute([$materiaId]);
+
+            $stmtIns = $this->db->prepare("INSERT INTO materia_evaluaciones (materia_id, nombre, peso_porcentaje) VALUES (?, ?, ?)");
+            foreach ($evaluaciones as $eval) {
+                if (!empty($eval['nombre'])) {
+                    $stmtIns->execute([$materiaId, $eval['nombre'], $eval['peso']]);
+                }
+            }
+            $this->db->commit();
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 }

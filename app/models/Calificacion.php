@@ -13,14 +13,19 @@ class Calificacion extends Model {
     }
 
     public function getByInscripcion(int $inscripcionId): array {
+        // Primero intentar obtener con periodos globales
         $stmt = $this->db->prepare("
-            SELECT c.*, p.nombre as periodo_nombre
+            SELECT c.*, p.nombre as periodo_nombre, 1 as is_global
             FROM calificaciones c
             JOIN periodos p ON c.periodo_id = p.id
             WHERE c.inscripcion_id = ?
-            ORDER BY p.id
+            UNION
+            SELECT c.*, me.nombre as periodo_nombre, 0 as is_global
+            FROM calificaciones c
+            JOIN materia_evaluaciones me ON c.periodo_id = me.id
+            WHERE c.inscripcion_id = ?
         ");
-        $stmt->execute([$inscripcionId]);
+        $stmt->execute([$inscripcionId, $inscripcionId]);
         return $stmt->fetchAll();
     }
 
