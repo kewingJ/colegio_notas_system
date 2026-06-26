@@ -17,12 +17,13 @@ define('DB_CHARSET',  'utf8mb4');
 define('API_BASE_URL',    'http://localhost/colegio2/api/v1');
 define('API_TIMEOUT',     10);       // segundos
 define('API_CACHE_TTL',   3600);     // 1 hora
-define('API_USE_MOCK',    true);     // Cambiar a false para conectar a API real
+define('API_BEARER_TOKEN', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZW1haWwiOiJhZG1pbkBob3RtYWlsLmVzIiwibmFtZSI6ImFkbWluIiwiaWF0IjoxNzgyNDg3NDUzfQ.v_ko2k_BcU66IVm-n3QbleZAd2vDlHd6HP66YihJR1A'); // Token para la API externa
+define('API_USE_MOCK',    false);     // Cambiar a false para conectar a API real
 
 // Endpoints:
-define('API_ENDPOINT_COLEGIO',        '/colegio');
-define('API_ENDPOINT_ALUMNOS',        '/alumnos');
-define('API_ENDPOINT_NIVELES_GRADOS', '/niveles-grados');
+define('API_ENDPOINT_COLEGIO',        '/colegio.php');
+define('API_ENDPOINT_ALUMNOS',        '/alumnos.php');
+define('API_ENDPOINT_NIVELES_GRADOS', '/niveles_grados.php');
 
 // --- CONFIGURACIÓN DE LA APLICACIÓN ---
 define('APP_NAME',     'Sistema de Notas');
@@ -31,7 +32,7 @@ define('APP_VERSION',  '1.0.0');
 define('APP_ENV',      'development'); // production | development
 
 // --- SEGURIDAD ---
-define('SESSION_NAME',       'notas_session');
+define('SESSION_NAME',       'arcoiris_notas_session');
 define('SESSION_LIFETIME',   7200);      // 2 horas
 define('CSRF_TOKEN_NAME',    '_csrf_token');
 define('BCRYPT_COST',        12);
