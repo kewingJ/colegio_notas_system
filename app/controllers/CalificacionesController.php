@@ -1,5 +1,5 @@
 <?php
-class CalificacionController extends Controller {
+class CalificacionesController extends Controller {
     private Materia $materiaModel;
     private Periodo $periodoModel;
     private Calificacion $calificacionModel;
