@@ -10,11 +10,11 @@
     </div>
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-green-500">
         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Eficiencia</p>
-        <h3 class="text-3xl font-black text-gray-900 mt-1">--</h3>
+        <h3 class="text-3xl font-black text-gray-900 mt-1"><?= $eficiencia ?>%</h3>
     </div>
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-orange-500">
         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cupos Libres</p>
-        <h3 class="text-3xl font-black text-gray-900 mt-1">N/A</h3>
+        <h3 class="text-3xl font-black text-gray-900 mt-1"><?= $cuposLibres ?></h3>
     </div>
 </div>
 
@@ -110,6 +110,9 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
+                            <a href="<?= APP_URL ?>/materias/enroll/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-green-600 transition-colors" title="Inscribir Alumnos">
+                                <i class="fas fa-user-graduate"></i>
+                            </a>
                             <a href="<?= APP_URL ?>/materias/assign/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-purple-600 transition-colors" title="Asignar Profesor">
                                 <i class="fas fa-user-plus"></i>
                             </a>
