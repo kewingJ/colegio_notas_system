@@ -44,7 +44,17 @@ class UsuariosController extends Controller {
         $this->requireAuth('administrador');
         $roles = $this->usuarioModel->getRoles();
 
+        // Para el Wizard de Profesor
+        $materiaModel = new Materia();
+        $materias = $materiaModel->getAll(1, 1000); // Obtener todas para el select
+        $niveles = $materiaModel->getNiveles();
+
         ob_start();
+        extract([
+            'roles' => $roles,
+            'materias' => $materias,
+            'niveles' => $niveles
+        ]);
         require_once __DIR__ . '/../../views/usuarios/create.php';
         $content = ob_get_clean();
 
@@ -71,12 +81,50 @@ class UsuariosController extends Controller {
             $this->redirect('usuarios/create');
         }
 
+        $db = Database::getInstance()->getConnection();
+        $db->beginTransaction();
+
         try {
             if ($this->usuarioModel->create($data)) {
+                $userId = (int)$db->lastInsertId();
+
+                // Manejo de Wizard de Profesor (Asignación de materia)
+                if (!empty($data['materia_id']) || !empty($data['new_materia_nombre'])) {
+                    $materiaId = !empty($data['materia_id']) ? (int)$data['materia_id'] : null;
+
+                    // Crear nueva materia si se solicitó
+                    if (!$materiaId && !empty($data['new_materia_nombre'])) {
+                        $materiaModel = new Materia();
+                        $newMateriaData = [
+                            'nombre' => $data['new_materia_nombre'],
+                            'codigo' => $data['new_materia_codigo'],
+                            'nivel_id' => $data['new_materia_nivel'],
+                            'grado_id' => $data['new_materia_grado'],
+                            'cupo_maximo' => 0,
+                            'activa' => 1
+                        ];
+                        if ($materiaModel->create($newMateriaData)) {
+                            $materiaId = (int)$db->lastInsertId();
+                        }
+                    }
+
+                    if ($materiaId) {
+                        $materiaModel = new Materia();
+                        $stmtConfig = $db->prepare("SELECT valor FROM configuracion WHERE clave = 'anio_lectivo_activo'");
+                        $stmtConfig->execute();
+                        $anioActivo = $stmtConfig->fetchColumn() ?: date('Y');
+                        $seccion = $data['seccion'] ?? 'A';
+
+                        $materiaModel->assignProfessor($materiaId, $userId, $anioActivo, $seccion);
+                    }
+                }
+
+                $db->commit();
                 $this->setFlash('success', 'Usuario creado correctamente.');
                 $this->redirect('usuarios');
             }
         } catch (Exception $e) {
+            $db->rollBack();
             $this->setFlash('error', 'Error al crear usuario: ' . $e->getMessage());
             $this->redirect('usuarios/create');
         }

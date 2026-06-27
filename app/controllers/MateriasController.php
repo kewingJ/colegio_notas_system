@@ -30,12 +30,12 @@ class MateriasController extends Controller {
 
         $inscripcionModel = new Inscripcion();
 
-        foreach ($materias as &$m) {
+        foreach ($materias as $key => $m) {
             $assignments = $this->materiaModel->getAssignments($m['id']);
-            $m['assignments'] = $assignments;
-            $m['inscritos_total'] = 0;
+            $materias[$key]['assignments'] = $assignments;
+            $materias[$key]['inscritos_total'] = 0;
             foreach ($assignments as $asig) {
-                $m['inscritos_total'] += count($inscripcionModel->getInscritosByMateria($asig['id']));
+                $materias[$key]['inscritos_total'] += count($inscripcionModel->getInscritosByMateria($asig['id']));
             }
         }
 
@@ -346,5 +346,19 @@ class MateriasController extends Controller {
     public function apiGrados($nivelId): void {
         $grados = $this->materiaModel->getGrados((int)$nivelId);
         $this->json($grados);
+    }
+
+    /**
+     * API Endpoint para generar código sugerido (AJAX)
+     */
+    public function apiSugerirCodigo(): void {
+        $this->requireAuth();
+        $nombre = $_GET['nombre'] ?? '';
+        if (empty($nombre)) {
+            $this->json(['codigo' => '']);
+            return;
+        }
+        $codigo = $this->materiaModel->generateSuggestedCode($nombre);
+        $this->json(['codigo' => $codigo]);
     }
 }
