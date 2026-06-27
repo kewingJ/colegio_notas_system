@@ -146,18 +146,20 @@ async function loadGrados() {
     }
 }
 
-function suggestCode() {
+async function suggestCode() {
     const nombre = document.getElementById('nombre_input').value;
-    const nivel = document.getElementById('nivel_select');
-    const grado = document.getElementById('grado_select');
     const codeInput = document.getElementById('codigo_input');
 
-    if (!nombre || nivel.selectedIndex <= 0 || grado.selectedIndex <= 0) return;
+    if (nombre.length < 3) return;
 
-    const prefix = nombre.substring(0, 3).toUpperCase();
-    const nivelName = nivel.options[nivel.selectedIndex].text.substring(0, 3).toUpperCase();
-    const gradoId = grado.value;
-
-    codeInput.value = `${prefix}-${nivelName}-${gradoId}`;
+    try {
+        const response = await fetch(`<?= APP_URL ?>/materias/apiSugerirCodigo?nombre=${encodeURIComponent(nombre)}`);
+        const data = await response.json();
+        if (data.codigo) {
+            codeInput.value = data.codigo;
+        }
+    } catch (e) {
+        console.error("Error al sugerir código:", e);
+    }
 }
 </script>

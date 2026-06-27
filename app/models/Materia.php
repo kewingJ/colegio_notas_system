@@ -180,4 +180,17 @@ class Materia extends Model {
             throw $e;
         }
     }
+
+    public function generateSuggestedCode(string $name): string {
+        $prefix = strtoupper(substr($name, 0, 3));
+        if (strlen($prefix) < 3) {
+            $prefix = str_pad($prefix, 3, 'X');
+        }
+
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM materias WHERE codigo LIKE ?");
+        $stmt->execute(["$prefix-%"]);
+        $count = (int)$stmt->fetchColumn();
+
+        return "$prefix-" . ($count + 1);
+    }
 }

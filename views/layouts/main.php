@@ -6,6 +6,8 @@
     <title><?= $title ?? 'Dashboard' ?> | <?= APP_NAME ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Alpine.js for Wizard and other interactions -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         // Preservar posición del scroll al recargar o navegar
         document.addEventListener("DOMContentLoaded", function() {

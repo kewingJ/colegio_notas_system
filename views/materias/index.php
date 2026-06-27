@@ -87,7 +87,7 @@
                                     <div class="flex items-center gap-2 group/asig">
                                         <span class="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 font-bold">Sec. <?= h($asig['seccion']) ?></span>
                                         <span class="text-xs font-medium text-gray-700"><?= h($asig['profesor_nombre']) ?></span>
-                                        <a href="<?= APP_URL ?>/materias/enroll/<?= $m['id'] ?>?pm_id=<?= $asig['id'] ?>" class="text-[10px] text-blue-600 font-bold hover:underline opacity-0 group-hover/asig:opacity-100 transition-opacity">
+                                        <a href="<?= APP_URL ?>/materias/enroll/<?= $m['id'] ?>?pm_id=<?= $asig['id'] ?>" class="text-[10px] text-blue-600 font-bold hover:underline">
                                             Inscribir
                                         </a>
                                     </div>
@@ -111,6 +111,9 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
+                            <a href="<?= APP_URL ?>/materias/enroll/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-green-600 transition-colors" title="Inscribir Alumnos">
+                                <i class="fas fa-user-check"></i>
+                            </a>
                             <a href="<?= APP_URL ?>/materias/assign/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-purple-600 transition-colors" title="Añadir/Cambiar Sección">
                                 <i class="fas fa-user-plus"></i>
                             </a>
