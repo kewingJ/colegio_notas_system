@@ -40,9 +40,15 @@
                     <div id="selection-counter" class="text-xs font-bold text-gray-500 hidden">
                         <span id="selected-count">0</span> seleccionados
                     </div>
-                    <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
-                        <i class="fas fa-user-plus"></i> Procesar Inscripción
-                    </button>
+
+                    <div class="flex gap-2">
+                        <button type="button" onclick="selectAllResults()" class="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition-all">
+                            Marcar Todos los Resultados
+                        </button>
+                        <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2">
+                            <i class="fas fa-user-plus"></i> Procesar Inscripción
+                        </button>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
@@ -147,6 +153,18 @@ document.addEventListener('DOMContentLoaded', () => {
 document.querySelector('form[action$="doEnroll"]').addEventListener('submit', () => {
     localStorage.removeItem('selected_enroll_alumnos_<?= $pm['id'] ?>');
 });
+
+function selectAllResults() {
+    if (confirm('¿Desea seleccionar todos los alumnos que coinciden con la búsqueda actual en todas las páginas?')) {
+        const form = document.querySelector('form[action$="doEnroll"]');
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'select_all_results';
+        input.value = '1';
+        form.appendChild(input);
+        form.submit();
+    }
+}
 
 function applyFilters() {
     const search = document.getElementById('alumnoSearch').value;

@@ -4,14 +4,12 @@ class Materia extends Model {
         $offset = ($page - 1) * $perPage;
         $params = [];
 
-        $sql = "SELECT m.*, n.nombre as nivel_nombre, g.nombre as grado_nombre,
-                       pm.id as pm_id, pm.seccion, u.nombre as profesor_nombre
+        $sql = "SELECT m.id, m.nombre, m.codigo, m.nivel_id, m.grado_id, m.cupo_maximo,
+                       n.nombre as nivel_nombre, g.nombre as grado_nombre
                 FROM materias m
                 JOIN niveles n ON m.nivel_id = n.id
                 JOIN grados g ON m.grado_id = g.id
-                LEFT JOIN profesor_materia pm ON m.id = pm.materia_id AND pm.activo = 1
-                LEFT JOIN usuarios u ON pm.profesor_id = u.id
-                WHERE 1=1";
+                WHERE m.activa = 1";
 
         if (!empty($filters['search'])) {
             $sql .= " AND (m.nombre LIKE ? OR m.codigo LIKE ?)";
@@ -38,7 +36,7 @@ class Materia extends Model {
 
     public function countAll(array $filters = []): int {
         $params = [];
-        $sql = "SELECT COUNT(*) FROM materias m WHERE 1=1";
+        $sql = "SELECT COUNT(*) FROM materias m WHERE m.activa = 1";
 
         if (!empty($filters['search'])) {
             $sql .= " AND (m.nombre LIKE ? OR m.codigo LIKE ?)";
@@ -62,9 +60,26 @@ class Materia extends Model {
     }
 
     public function findById(int $id): ?array {
-        $stmt = $this->db->prepare("SELECT * FROM materias WHERE id = ?");
+        $stmt = $this->db->prepare("
+            SELECT m.*, n.nombre as nivel_nombre, g.nombre as grado_nombre
+            FROM materias m
+            JOIN niveles n ON m.nivel_id = n.id
+            JOIN grados g ON m.grado_id = g.id
+            WHERE m.id = ?
+        ");
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
+    }
+
+    public function getAssignments(int $materiaId): array {
+        $stmt = $this->db->prepare("
+            SELECT pm.*, u.nombre as profesor_nombre
+            FROM profesor_materia pm
+            JOIN usuarios u ON pm.profesor_id = u.id
+            WHERE pm.materia_id = ? AND pm.activo = 1
+        ");
+        $stmt->execute([$materiaId]);
+        return $stmt->fetchAll();
     }
 
     public function create(array $data): bool {
