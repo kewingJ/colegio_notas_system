@@ -31,8 +31,12 @@ class MateriasController extends Controller {
         $inscripcionModel = new Inscripcion();
 
         foreach ($materias as &$m) {
-            $pm_id = $m['pm_id'];
-            $m['inscritos'] = $pm_id ? count($inscripcionModel->getInscritosByMateria($pm_id)) : 0;
+            $assignments = $this->materiaModel->getAssignments($m['id']);
+            $m['assignments'] = $assignments;
+            $m['inscritos_total'] = 0;
+            foreach ($assignments as $asig) {
+                $m['inscritos_total'] += count($inscripcionModel->getInscritosByMateria($asig['id']));
+            }
         }
 
         $totalInscritos = (int)$db->query("SELECT COUNT(*) FROM inscripciones")->fetchColumn();
@@ -69,22 +73,38 @@ class MateriasController extends Controller {
 
         $page = (int)($_GET['page'] ?? 1);
         $search = $_GET['search'] ?? '';
+        $pm_id_filter = $_GET['pm_id'] ?? null;
         $perPage = 10;
 
         $db = Database::getInstance()->getConnection();
-        $stmtPM = $db->prepare("
-            SELECT pm.*, m.nombre as materia_nombre, m.nivel_id, m.grado_id, n.nombre as nivel_nombre, g.nombre as grado_nombre
-            FROM profesor_materia pm
-            JOIN materias m ON pm.materia_id = m.id
-            JOIN niveles n ON m.nivel_id = n.id
-            JOIN grados g ON m.grado_id = g.id
-            WHERE m.id = ? AND pm.activo = 1 LIMIT 1
-        ");
-        $stmtPM->execute([$materiaId]);
+
+        // Si viene un pm_id específico, usarlo. Si no, intentar obtener el primero.
+        if ($pm_id_filter) {
+            $stmtPM = $db->prepare("
+                SELECT pm.*, m.nombre as materia_nombre, m.nivel_id, m.grado_id, n.nombre as nivel_nombre, g.nombre as grado_nombre
+                FROM profesor_materia pm
+                JOIN materias m ON pm.materia_id = m.id
+                JOIN niveles n ON m.nivel_id = n.id
+                JOIN grados g ON m.grado_id = g.id
+                WHERE pm.id = ? AND pm.activo = 1
+            ");
+            $stmtPM->execute([$pm_id_filter]);
+        } else {
+            $stmtPM = $db->prepare("
+                SELECT pm.*, m.nombre as materia_nombre, m.nivel_id, m.grado_id, n.nombre as nivel_nombre, g.nombre as grado_nombre
+                FROM profesor_materia pm
+                JOIN materias m ON pm.materia_id = m.id
+                JOIN niveles n ON m.nivel_id = n.id
+                JOIN grados g ON m.grado_id = g.id
+                WHERE m.id = ? AND pm.activo = 1 LIMIT 1
+            ");
+            $stmtPM->execute([$materiaId]);
+        }
+
         $pm = $stmtPM->fetch();
 
         if (!$pm) {
-            $this->setFlash('error', 'Debe asignar un profesor a la materia antes de inscribir alumnos.');
+            $this->setFlash('error', 'Debe asignar un profesor y sección a la materia antes de inscribir alumnos.');
             $this->redirect('materias');
         }
 
@@ -131,15 +151,43 @@ class MateriasController extends Controller {
         $data = $this->getPost();
 
         $pm_id = (int)$data['pm_id'];
-        $carnets = $data['alumnos'] ?? [];
         $anio = $data['anio_lectivo'];
-
         $inscripcionModel = new Inscripcion();
         $count = 0;
-        foreach ($carnets as $carnet) {
-            if (!$inscripcionModel->isEnrolled($carnet, $pm_id, $anio)) {
-                if ($inscripcionModel->enroll($carnet, $pm_id, $anio)) {
-                    $count++;
+
+        // Caso 1: Seleccionar todos los resultados filtrados
+        if (isset($data['select_all_results']) && $data['select_all_results'] == '1') {
+            // Re-obtener los datos de la materia para conocer nivel/grado
+            $db = Database::getInstance()->getConnection();
+            $stmtPM = $db->prepare("
+                SELECT m.nombre as materia_nombre, n.nombre as nivel_nombre, g.nombre as grado_nombre
+                FROM profesor_materia pm
+                JOIN materias m ON pm.materia_id = m.id
+                JOIN niveles n ON m.nivel_id = n.id
+                JOIN grados g ON m.grado_id = g.id
+                WHERE pm.id = ?
+            ");
+            $stmtPM->execute([$pm_id]);
+            $pm_info = $stmtPM->fetch();
+
+            // Obtener todos los alumnos del sistema que coincidan con el nivel/grado
+            $alumnos = $this->apiService->getAlumnosActivos($pm_info['nivel_nombre'], $pm_info['grado_nombre']);
+            foreach ($alumnos as $a) {
+                if (!$inscripcionModel->isEnrolled($a['carnet'], $pm_id, $anio)) {
+                    if ($inscripcionModel->enroll($a['carnet'], $pm_id, $anio)) {
+                        $count++;
+                    }
+                }
+            }
+        }
+        // Caso 2: Selección manual individual (acumulada por JS o normal)
+        else {
+            $carnets = $data['alumnos'] ?? [];
+            foreach ($carnets as $carnet) {
+                if (!$inscripcionModel->isEnrolled($carnet, $pm_id, $anio)) {
+                    if ($inscripcionModel->enroll($carnet, $pm_id, $anio)) {
+                        $count++;
+                    }
                 }
             }
         }

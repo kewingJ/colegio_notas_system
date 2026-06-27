@@ -60,63 +60,61 @@
         <table class="w-full text-left">
             <thead>
                 <tr class="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-                    <th class="px-6 py-4">Código</th>
                     <th class="px-6 py-4">Materia</th>
                     <th class="px-6 py-4">Nivel / Grado</th>
-                    <th class="px-6 py-4">Profesor Responsable</th>
-                    <th class="px-6 py-4">Inscritos</th>
-                    <th class="px-6 py-4 text-right">Acciones</th>
+                    <th class="px-6 py-4">Secciones y Profesores</th>
+                    <th class="px-6 py-4">Inscritos Totales</th>
+                    <th class="px-6 py-4 text-right">Gestión General</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 <?php foreach ($materias as $m): ?>
                 <tr class="hover:bg-gray-50/50 transition-colors">
                     <td class="px-6 py-4">
-                        <span class="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded"><?= h($m['codigo']) ?></span>
-                    </td>
-                    <td class="px-6 py-4">
                         <p class="text-sm font-bold text-gray-900"><?= h($m['nombre']) ?></p>
+                        <span class="font-mono text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded"><?= h($m['codigo']) ?></span>
                     </td>
                     <td class="px-6 py-4">
                         <p class="text-xs text-gray-700 font-medium"><?= h($m['nivel_nombre']) ?></p>
                         <p class="text-[10px] text-gray-400 uppercase font-bold"><?= h($m['grado_nombre']) ?></p>
                     </td>
                     <td class="px-6 py-4">
-                        <?php if ($m['profesor_nombre']): ?>
-                            <div class="flex items-center gap-2">
-                                <div class="h-6 w-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold">
-                                    <?= substr($m['profesor_nombre'], 0, 1) ?>
-                                </div>
-                                <span class="text-xs font-medium text-gray-700"><?= h($m['profesor_nombre']) ?></span>
-                                <span class="text-[10px] bg-gray-100 px-1 rounded text-gray-500 font-bold">Sec. <?= $m['seccion'] ?></span>
-                            </div>
-                        <?php else: ?>
-                            <span class="text-xs text-gray-400 italic">No asignado</span>
-                        <?php endif; ?>
+                        <div class="space-y-2">
+                            <?php if (empty($m['assignments'])): ?>
+                                <span class="text-xs text-gray-400 italic">Sin secciones asignadas</span>
+                            <?php else: ?>
+                                <?php foreach ($m['assignments'] as $asig): ?>
+                                    <div class="flex items-center gap-2 group/asig">
+                                        <span class="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 font-bold">Sec. <?= h($asig['seccion']) ?></span>
+                                        <span class="text-xs font-medium text-gray-700"><?= h($asig['profesor_nombre']) ?></span>
+                                        <a href="<?= APP_URL ?>/materias/enroll/<?= $m['id'] ?>?pm_id=<?= $asig['id'] ?>" class="text-[10px] text-blue-600 font-bold hover:underline opacity-0 group-hover/asig:opacity-100 transition-opacity">
+                                            Inscribir
+                                        </a>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="flex-1 h-1.5 w-16 bg-gray-100 rounded-full overflow-hidden">
                                 <?php
-                                $percent = $m['cupo_maximo'] > 0 ? ($m['inscritos'] / $m['cupo_maximo']) * 100 : 0;
+                                $percent = $m['cupo_maximo'] > 0 ? ($m['inscritos_total'] / $m['cupo_maximo']) * 100 : 0;
                                 $color = $percent > 90 ? 'bg-red-500' : ($percent > 50 ? 'bg-yellow-500' : 'bg-green-500');
                                 ?>
                                 <div class="h-full <?= $color ?>" style="width: <?= min(100, $percent) ?>%"></div>
                             </div>
                             <span class="text-xs font-bold text-gray-700">
-                                <?= $m['inscritos'] ?><?= $m['cupo_maximo'] > 0 ? '/' . $m['cupo_maximo'] : '' ?>
+                                <?= $m['inscritos_total'] ?><?= $m['cupo_maximo'] > 0 ? '/' . $m['cupo_maximo'] : '' ?>
                             </span>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <a href="<?= APP_URL ?>/materias/enroll/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-green-600 transition-colors" title="Inscribir Alumnos">
-                                <i class="fas fa-user-graduate"></i>
-                            </a>
-                            <a href="<?= APP_URL ?>/materias/assign/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-purple-600 transition-colors" title="Asignar Profesor">
+                            <a href="<?= APP_URL ?>/materias/assign/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-purple-600 transition-colors" title="Añadir/Cambiar Sección">
                                 <i class="fas fa-user-plus"></i>
                             </a>
-                            <a href="<?= APP_URL ?>/materias/edit/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Editar">
+                            <a href="<?= APP_URL ?>/materias/edit/<?= $m['id'] ?>" class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Editar Materia">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <form action="<?= APP_URL ?>/materias/delete/<?= $m['id'] ?>" method="POST" class="inline" onsubmit="return confirm('¿Está seguro de eliminar esta materia?')">
