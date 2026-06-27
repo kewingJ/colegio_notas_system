@@ -88,37 +88,44 @@ class UsuariosController extends Controller {
             if ($this->usuarioModel->create($data)) {
                 $userId = (int)$db->lastInsertId();
 
-                // Manejo de Wizard de Profesor (Asignación de materia)
-                if (!empty($data['materia_id']) || !empty($data['new_materia_nombre'])) {
-                    $materiaId = !empty($data['materia_id']) ? (int)$data['materia_id'] : null;
-
-                    // Crear nueva materia si se solicitó
-                    if (!$materiaId && !empty($data['new_materia_nombre'])) {
-                        $materiaModel = new Materia();
-                        $newMateriaData = [
-                            'nombre' => $data['new_materia_nombre'],
-                            'codigo' => $data['new_materia_codigo'],
-                            'nivel_id' => $data['new_materia_nivel'],
-                            'grado_id' => $data['new_materia_grado'],
-                            'cupo_maximo' => 0,
-                            'activa' => 1
-                        ];
-                        if ($materiaModel->create($newMateriaData)) {
-                            $materiaId = (int)$db->lastInsertId();
+                // Manejo de Wizard de Profesor (Asignaciones múltiples de materia)
+                if (!empty($data['asignaciones']) && is_array($data['asignaciones'])) {
+                    $materiaModel = new Materia();
+                    
+                    foreach ($data['asignaciones'] as $asig) {
+                        $materiaId = null;
+                        
+                        if ($asig['type'] === 'existing') {
+                            $materiaId = !empty($asig['materia_id']) ? (int)$asig['materia_id'] : null;
+                        } else if ($asig['type'] === 'new') {
+                            $newMateriaData = [
+                                'nombre' => $asig['nombre'],
+                                'codigo' => $asig['codigo'],
+                                'nivel_id' => $asig['nivel_id'],
+                                'grado_id' => $asig['grado_id'],
+                                'cupo_maximo' => (int)($asig['cupo_maximo'] ?? 0),
+                                'descripcion' => $asig['descripcion'] ?? '',
+                                'activa' => 1
+                            ];
+                            if ($materiaModel->create($newMateriaData)) {
+                                $materiaId = (int)$db->lastInsertId();
+                            }
                         }
-                    }
-
-                    if ($materiaId) {
-                        $materiaModel = new Materia();
-                        $stmtConfig = $db->prepare("SELECT valor FROM configuracion WHERE clave = 'anio_lectivo_activo'");
-                        $stmtConfig->execute();
-                        $anioActivo = $stmtConfig->fetchColumn() ?: date('Y');
-                        $seccion = $data['seccion'] ?? 'A';
-
-                        $materiaModel->assignProfessor($materiaId, $userId, $anioActivo, $seccion);
+                        
+                        if ($materiaId) {
+                            $anio = $asig['anio_lectivo'] ?? date('Y');
+                            $seccion = $asig['seccion'] ?? 'A';
+                            // Ignorar error de asignación duplicada para el mismo profesor, materia, año y sección
+                            try {
+                                $materiaModel->assignProfessor($materiaId, $userId, $anio, $seccion);
+                            } catch (Exception $e) {
+                                // Ignorar si ya existe
+                            }
+                        }
                     }
                 }
 
+                $this->logAudit('CREAR_USUARIO', 'usuarios', $userId, ['email' => $data['email'], 'rol_id' => $data['rol_id']]);
                 $db->commit();
                 $this->setFlash('success', 'Usuario creado correctamente.');
                 $this->redirect('usuarios');
@@ -182,6 +189,7 @@ class UsuariosController extends Controller {
 
         try {
             if ($this->usuarioModel->update($id, $data)) {
+                $this->logAudit('ACTUALIZAR_USUARIO', 'usuarios', $id, ['email' => $data['email'] ?? '', 'rol_id' => $data['rol_id'] ?? '']);
                 $this->setFlash('success', 'Usuario actualizado correctamente.');
                 $this->redirect('usuarios');
             }
@@ -207,6 +215,8 @@ class UsuariosController extends Controller {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("UPDATE usuarios SET activo = ? WHERE id = ?");
         $stmt->execute([$newStatus, $id]);
+
+        $this->logAudit($newStatus ? 'ACTIVAR_USUARIO' : 'DESACTIVAR_USUARIO', 'usuarios', $id);
 
         $this->setFlash('success', 'Estado de usuario actualizado.');
         $this->redirect('usuarios');

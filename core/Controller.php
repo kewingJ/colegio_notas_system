@@ -56,4 +56,11 @@ abstract class Controller {
             $this->redirect('dashboard');
         }
     }
+
+    protected function logAudit(string $accion, ?string $tabla = null, ?int $registroId = null, $detalle = null): void {
+        require_once __DIR__ . '/../app/models/Audit.php';
+        $auditModel = new Audit();
+        $usuarioId = Session::get('user_id');
+        $auditModel->log($usuarioId, $accion, $tabla, $registroId, $detalle);
+    }
 }

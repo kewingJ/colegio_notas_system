@@ -63,6 +63,7 @@
                         <th class="px-6 py-4">Carnet</th>
                         <th class="px-6 py-4">Estudiante</th>
                         <th class="px-6 py-4">Estado en API</th>
+                        <th class="px-6 py-4 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -80,6 +81,13 @@
                         <td class="px-6 py-4">
                             <span class="text-[10px] font-black uppercase text-green-600 bg-green-50 px-2 py-1 rounded"><?= h($a['estado']) ?></span>
                         </td>
+                        <td class="px-6 py-4 text-center">
+                            <?php if ($a['ya_inscrito']): ?>
+                                <button type="button" onclick="unenroll('<?= h($a['carnet']) ?>', '<?= h(addslashes($a['nombre'])) ?>')" class="text-xs font-bold text-red-500 hover:text-red-700 transition-colors" title="Quitar inscripción">
+                                    <i class="fas fa-user-minus mr-1"></i> Quitar
+                                </button>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -96,6 +104,14 @@
 
     <?php require_once __DIR__ . '/../partials/pagination.php'; ?>
 </div>
+
+<form id="unenrollForm" action="<?= APP_URL ?>/materias/doUnenroll" method="POST" style="display: none;">
+    <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= Session::get(CSRF_TOKEN_NAME) ?>">
+    <input type="hidden" name="pm_id" value="<?= $pm['id'] ?>">
+    <input type="hidden" name="materia_id" value="<?= $pm['materia_id'] ?>">
+    <input type="hidden" name="anio_lectivo" value="<?= $pm['anio_lectivo'] ?>">
+    <input type="hidden" name="carnet" id="unenroll_carnet" value="">
+</form>
 
 <script>
 // Persistencia de selección entre páginas
@@ -189,4 +205,11 @@ document.getElementById('selectAll').addEventListener('change', function() {
         cb.dispatchEvent(new Event('change'));
     });
 });
+
+function unenroll(carnet, nombre) {
+    if (confirm(`¿Está seguro que desea quitar la inscripción de ${nombre} (${carnet})? Se perderán las calificaciones asociadas a esta materia.`)) {
+        document.getElementById('unenroll_carnet').value = carnet;
+        document.getElementById('unenrollForm').submit();
+    }
+}
 </script>

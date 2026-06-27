@@ -192,8 +192,34 @@ class MateriasController extends Controller {
             }
         }
 
+        $this->logAudit('INSCRIBIR_ALUMNOS', 'inscripciones', null, ['pm_id' => $pm_id, 'anio' => $anio, 'cantidad' => $count]);
+
         $this->setFlash('success', "$count alumnos inscritos correctamente.");
         $this->redirect('materias');
+    }
+
+    public function doUnenroll(): void {
+        $this->requireAuth('administrador');
+        $this->validateCsrf();
+        $data = $this->getPost();
+
+        $pm_id = (int)$data['pm_id'];
+        $anio = $data['anio_lectivo'];
+        $carnet = $data['carnet'];
+
+        $inscripcionModel = new Inscripcion();
+        if ($inscripcionModel->unenroll($carnet, $pm_id, $anio)) {
+            $this->logAudit('DESINSCRIBIR_ALUMNO', 'inscripciones', null, ['pm_id' => $pm_id, 'anio' => $anio, 'carnet' => $carnet]);
+            $this->setFlash('success', 'Alumno desinscrito correctamente.');
+        } else {
+            $this->setFlash('error', 'No se pudo desinscribir al alumno.');
+        }
+
+        // Regresamos a la página actual de la lista de inscritos si es posible
+        $page = $_GET['page'] ?? 1;
+        $search = $_GET['search'] ?? '';
+        $query = http_build_query(['pm_id' => $pm_id, 'page' => $page, 'search' => $search]);
+        $this->redirect('materias/enroll/' . $data['materia_id'] . '?' . $query);
     }
 
     public function create(): void {
@@ -232,6 +258,8 @@ class MateriasController extends Controller {
                 $this->materiaModel->setEvaluaciones($materiaId, $data['evaluaciones']);
             }
 
+            $this->logAudit('CREAR_MATERIA', 'materias', $materiaId, ['nombre' => $data['nombre']]);
+
             $this->setFlash('success', 'Materia creada correctamente.');
             $this->redirect('materias');
         } else {
@@ -269,6 +297,8 @@ class MateriasController extends Controller {
                 $this->materiaModel->setEvaluaciones($id, $data['evaluaciones']);
             }
 
+            $this->logAudit('ACTUALIZAR_MATERIA', 'materias', $id, ['nombre' => $data['nombre'] ?? '']);
+
             $this->setFlash('success', 'Materia actualizada correctamente.');
             $this->redirect('materias');
         } else {
@@ -282,6 +312,7 @@ class MateriasController extends Controller {
         $this->validateCsrf();
 
         if ($this->materiaModel->delete((int)$id)) {
+            $this->logAudit('ELIMINAR_MATERIA', 'materias', (int)$id);
             $this->setFlash('success', 'Materia eliminada correctamente.');
         } else {
             $this->setFlash('error', 'No se pudo eliminar la materia.');
@@ -332,6 +363,7 @@ class MateriasController extends Controller {
         }
 
         if ($this->materiaModel->assignProfessor((int)$id, $profesorId, $anio, $seccion)) {
+            $this->logAudit('ASIGNAR_PROFESOR_MATERIA', 'profesor_materia', null, ['materia_id' => $id, 'profesor_id' => $profesorId, 'seccion' => $seccion, 'anio_lectivo' => $anio]);
             $this->setFlash('success', 'Profesor asignado correctamente.');
             $this->redirect('materias');
         } else {

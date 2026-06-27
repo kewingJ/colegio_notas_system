@@ -156,6 +156,7 @@ class CalificacionesController extends Controller {
         }
 
         if ($success) {
+            $this->logAudit('GUARDAR_CALIFICACIONES', 'calificaciones', null, ['pm_id' => $data['pm_id'] ?? null, 'period_type' => $periodType]);
             $this->setFlash('success', 'Calificaciones actualizadas correctamente.');
         } else {
             $this->setFlash('error', 'Hubo un error al guardar algunas notas.');
