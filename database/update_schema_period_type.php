@@ -17,11 +17,20 @@ try {
 
     // 2. Drop and recreate Unique key to include period_type
     try {
-        $db->exec("ALTER TABLE calificaciones DROP INDEX uq_insc_periodo");
+        // Para evitar el error 1553 (índice necesario para FK),
+        // primero creamos un índice normal que respalde la FK permanentemente
+        $db->exec("ALTER TABLE calificaciones ADD INDEX idx_inscripcion_id (inscripcion_id)");
+        echo "Supporting index 'idx_inscripcion_id' added for Foreign Key.\n";
+
+        // Ahora intentamos añadir el nuevo UNIQUE
         $db->exec("ALTER TABLE calificaciones ADD UNIQUE KEY uq_insc_periodo_type (inscripcion_id, periodo_id, period_type)");
-        echo "Unique constraint updated to include 'period_type'.\n";
+        echo "New unique constraint 'uq_insc_periodo_type' added.\n";
+
+        // Y ahora podemos borrar el viejo sin problemas
+        $db->exec("ALTER TABLE calificaciones DROP INDEX uq_insc_periodo");
+        echo "Old unique constraint 'uq_insc_periodo' removed.\n";
     } catch (Exception $e) {
-        echo "Could not update unique constraint: " . $e->getMessage() . "\n";
+        echo "Note: " . $e->getMessage() . "\n";
     }
 
     echo "Database schema update completed successfully.\n";
